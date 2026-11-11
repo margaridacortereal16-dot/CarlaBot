@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarlaBot: Sobrevivente do 1º Ciclo</title>
+  
+  <!-- Carregar o Tailwind CSS para o estilo (cores, espaçamentos, etc) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Carregar o Babel para compilar o código React no browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- MAPA DE IMPORTAÇÕES: Garante que só existe UMA instância de React em toda a aplicação -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.378.0?external=react,react-dom"
+      }
+    }
+  </script>
+
+  <style>
+    /* Ocultar barra de scroll onde necessário */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans selection:bg-cyan-200">
+
+  <!-- A nossa App vai ser renderizada aqui dentro -->
+  <div id="root"></div>
+
+  <!-- Script principal em React (Babel) -->
+  <script type="text/babel" data-type="module">
+    import React, { useState } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { 
+      FileText, Plus, Trash2, Sparkles, Copy, Download, Printer, 
+      CheckCircle2, RefreshCw, Calendar, Users, 
+      Edit3, ChevronRight, ChevronLeft, BookOpen, 
+      Building2, Eye, ShieldCheck, AlertCircle, Paperclip,
+      Upload, X, File, FileText as FileTextIcon
+    } from 'lucide-react';
+
+    const ESCOLAS_OPCOES = [
+      'Escola Básica e Secundária Josefa de Óbidos (Escola Sede)',
+      'Escola Básica n.º 72 de Lisboa (Escola Básica com Jardim de Infância)',
+      'Escola Básica Rainha Santa Isabel',
+      'Escola Básica do 1.º Ciclo com Jardim de Infância Engenheiro Ressano Garcia'
+    ];
+
+    const MEMBROS_LISTA = [
+      'Carla Carvalho',
+      'Paula Simões'
+    ];
+
+    const SAMPLE_DATA = {
+      tipoAta: 'departamento',
+      agrupamento: 'Agrupamento de Escolas Bartolomeu de Gusmão',
+      escola: 'Escola Básica e Secundária Josefa de Óbidos (Escola Sede)',
+      departamento: 'Departamento de Educação Pré-Escolar e 1.º Ciclo',
+      numeroAta: '01',
+      anoLetivo: '2026/2027',
+      data: new Date().toISOString().split('T')[0],
+      horaInicio: '14:30',
+      horaFim: '16:30',
+      local: 'Sala de Reuniões / Plataforma Teams',
+      presidente: 'Margarida Simões (Presidente)',
+      secretario: 'Carla Carvalho',
+      membrosPresentes: MEMBROS_LISTA.join('\n'),
+      membrosAusentes: 'Não se registaram faltas.',
+      ordemTrabalhos: [
+        'Aprovação da ata da reunião anterior;',
+        'Planeamento das atividades pedagógicas do 1.º Período;',
+        'Organização dos espaços e acolhimento das crianças;',
+        'Outros assuntos de interesse do Departamento.'
+      ],
+      intervencoes: [
+        {
+          ponto: 'Ponto 1: Aprovação da ata da reunião anterior',
+          resumo: 'A ata anterior foi colocada à apreciação do departamento. Não havendo qualquer reparo ou alteração a assinalar, a ata foi submetida a votação.',
+          deliberacao: 'Aprovada por unanimidade.',
+          anexos: 'Anexo I - Cópia da Ata N.º 12 do Ano Anterior',
+          resumoAnexo: 'Documento contendo o registo da sessão de encerramento do ano letivo transato, com aprovação dos relatórios finais de departamento.',
+          ficheirosAnexados: []
+        },
+        {
+          ponto: 'Ponto 2: Planeamento das atividades pedagógicas',
+          resumo: 'A Presidente Margarida Simões deu as boas-vindas e apresentou a proposta do plano de atividades. Os membros do departamento partilharam sugestões para a articulação entre as salas e os jardins de infância, com foco no desenvolvimento integral e na inclusão.',
+          deliberacao: 'Plano de atividades aprovado por unanimidade com as sugestões integradas.',
+          anexos: 'Anexo II - Proposta de Plano Anual de Atividades do Departamento',
+          resumoAnexo: 'A proposta inclui 4 visitas de estudo intersalas, feira do livro infantil no 1.º período, projetos de sustentabilidade ambiental e oficinas de expressão plástica.',
+          ficheirosAnexados: []
+        }
+      ],
+      estiloRedacao: 'formal_detalhado'
+    };
+
+    function App() {
+      const [tipoAta, setTipoAta] = useState('departamento');
+      const [agrupamento, setAgrupamento] = useState('Agrupamento de Escolas Bartolomeu de Gusmão');
+      const [escola, setEscola] = useState('Escola Básica e Secundária Josefa de Óbidos (Escola Sede)');
+      const [departamento, setDepartamento] = useState('Departamento de Educação Pré-Escolar e 1.º Ciclo');
+      const [numeroAta, setNumeroAta] = useState('01');
+      const [anoLetivo, setAnoLetivo] = useState('2026/2027');
+      const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+      const [horaInicio, setHoraInicio] = useState('14:30');
+      const [horaFim, setHoraFim] = useState('16:00');
+      const [local, setLocal] = useState('Sala de Reuniões');
+      
+      const [presidente, setPresidente] = useState('Margarida Simões');
+      const [secretario, setSecretario] = useState('Carla Carvalho');
+      
+      const [membrosPresentes, setMembrosPresentes] = useState(MEMBROS_LISTA.join('\n'));
+      const [membrosAusentes, setMembrosAusentes] = useState('Não se registaram faltas.');
+
+      const [ordemTrabalhos, setOrdemTrabalhos] = useState([
+        'Aprovação da ata anterior',
+        'Balanço do Período Letivo',
+        'Diversos'
+      ]);
+      const [novoPontoOrdem, setNovoPontoOrdem] = useState('');
+
+      const [intervencoes, setIntervencoes] = useState([
+        {
+          ponto: 'Ponto 1: Aprovação da ata anterior',
+          resumo: 'Submetida a apreciação, não foram apresentadas correções.',
+          deliberacao: 'Ata aprovada por unanimidade.',
+          anexos: '',
+          resumoAnexo: '',
+          ficheirosAnexados: []
+        }
+      ]);
+
+      const [passoAtual, setPassoAtual] = useState(1);
+      const [estiloRedacao, setEstiloRedacao] = useState('formal_detalhado');
+      const [textoAtaGerada, setTextoAtaGerada] = useState('');
+      const [isGerando, setIsGerando] = useState(false);
+      const [modoVisualizacao, setModoVisualizacao] = useState(false);
+      const [mensagemToast, setMensagemToast] = useState(null);
+
+      const mostrarNotificacao = (texto, tipo = 'sucesso') => {
+        setMensagemToast({ texto, tipo });
+        setTimeout(() => setMensagemToast(null), 3500);
+      };
+
+      const carregarExemplo = () => {
+        setTipoAta(SAMPLE_DATA.tipoAta);
+        setAgrupamento(SAMPLE_DATA.agrupamento);
+        setEscola(SAMPLE_DATA.escola);
+        setDepartamento(SAMPLE_DATA.departamento);
+        setNumeroAta(SAMPLE_DATA.numeroAta);
+        setAnoLetivo(SAMPLE_DATA.anoLetivo);
+        setData(SAMPLE_DATA.data);
+        setHoraInicio(SAMPLE_DATA.horaInicio);
+        setHoraFim(SAMPLE_DATA.horaFim);
+        setLocal(SAMPLE_DATA.local);
+        setPresidente(SAMPLE_DATA.presidente);
+        setSecretario(SAMPLE_DATA.secretario);
+        setMembrosPresentes(SAMPLE_DATA.membrosPresentes);
+        setMembrosAusentes(SAMPLE_DATA.membrosAusentes);
+        setOrdemTrabalhos([...SAMPLE_DATA.ordemTrabalhos]);
+        setIntervencoes([...SAMPLE_DATA.intervencoes]);
+        mostrarNotificacao('Dados da reunião carregados com sucesso!');
+      };
+
+      const adicionarPontoOrdem = () => {
+        if (!novoPontoOrdem.trim()) return;
+        const novosPontos = [...ordemTrabalhos, novoPontoOrdem.trim()];
+        setOrdemTrabalhos(novosPontos);
+        
+        const novoNum = novosPontos.length;
+        setIntervencoes([
+          ...intervencoes,
+          {
+            ponto: `Ponto ${novoNum}: ${novoPontoOrdem.trim()}`,
+            resumo: '',
+            deliberacao: '',
+            anexos: '',
+            resumoAnexo: '',
+            ficheirosAnexados: []
+          }
+        ]);
+        
+        setNovoPontoOrdem('');
+      };
+
+      const removerPontoOrdem = (index) => {
+        const novosPontos = ordemTrabalhos.filter((_, i) => i !== index);
+        setOrdemTrabalhos(novosPontos);
+        setIntervencoes(intervencoes.filter((_, i) => i !== index));
+      };
+
+      const atualizarIntervencao = (index, campo, valor) => {
+        const copia = [...intervencoes];
+        if (!copia[index]) {
+          copia[index] = { ponto: `Ponto ${index + 1}`, resumo: '', deliberacao: '', anexos: '', resumoAnexo: '', ficheirosAnexados: [] };
+        }
+        copia[index][campo] = valor;
+        setIntervencoes(copia);
+      };
+
+      const handleFileUpload = (index, event) => {
+        const files = Array.from(event.target.files || []);
+        if (files.length === 0) return;
+
+        const novosFicheiros = files.map(f => ({
+          name: f.name,
+          size: (f.size / 1024).toFixed(1) + ' KB',
+          type: f.type
+        }));
+
+        const copia = [...intervencoes];
+        if (!copia[index]) {
+          copia[index] = { ponto: `Ponto ${index + 1}`, resumo: '', deliberacao: '', anexos: '', resumoAnexo: '', ficheirosAnexados: [] };
+        }
+
+        const existentes = copia[index].ficheirosAnexados || [];
+        const listaAtualizada = [...existentes, ...novosFicheiros];
+        copia[index].ficheirosAnexados = listaAtualizada;
+
+        const nomesFormatados = listaAtualizada.map((f, i) => `Anexo ${i + 1}: ${f.name}`).join('; ');
+        copia[index].anexos = nomesFormatados;
+
+        setIntervencoes(copia);
+        mostrarNotificacao(`${files.length} ficheiro(s) anexado(s)! Preencha o resumo do documento para a ata.`);
+        event.target.value = '';
+      };
+
+      const removerFicheiroAnexo = (pontoIndex, fileIndex) => {
+        const copia = [...intervencoes];
+        const ficheiros = (copia[pontoIndex]?.ficheirosAnexados || []).filter((_, i) => i !== fileIndex);
+        copia[pontoIndex].ficheirosAnexados = ficheiros;
+
+        if (ficheiros.length > 0) {
+          copia[pontoIndex].anexos = ficheiros.map((f, i) => `Anexo ${i + 1}: ${f.name}`).join('; ');
+        } else {
+          copia[pontoIndex].anexos = '';
+        }
+
+        setIntervencoes(copia);
+        mostrarNotificacao('Anexo removido.', 'aviso');
+      };
+
+      const gerarAtaComGemini = async () => {
+        setIsGerando(true);
+
+        const promptSistema = `Tu és um perito em redação jurídica e administrativa para o sistema de ensino básico em Portugal (Português Europeu formal e institucional).
+    O teu objetivo é transformar os dados e notas da reunião numa Ata Oficial perfeita, coesa, elegante e em conformidade com as práticas normativas escolares portuguesas (usa termos como "Agrupamento de Escolas", "Ordem de Trabalhos", "Submetido a votação", "Aprovado por unanimidade/maioria", "Lavrou-se a presente ata").
+
+    PERFIL DOS ALUNOS (1º CICLO) - DIRETRIZ OBRIGATÓRIA:
+    Deves ter sempre em conta o Perfil dos Alunos à Saída da Escolaridade Obrigatória. Integra subtilmente, nos resumos das discussões ou do planeamento pedagógico, princípios como o desenvolvimento integral da criança, humanismo, inclusão, sustentabilidade ambiental, adaptabilidade e o fomento do pensamento crítico.
+
+    REGRAS ESPECÍFICAS SOBRE DOCUMENTOS ANEXOS:
+    Sempre que existirem documentos anexos indicados num ponto da ordem de trabalhos (fichas, relatórios, propostas, atas anteriores, planos de trabalho, etc.), É OBRIGATÓRIO incluir no desenvolvimento desse ponto um resumo sintético, límpido e explicativo do conteúdo desse anexo e do seu papel nas deliberações do órgão.
+
+    ESTRUTURA OBRIGATÓRIA DA ATA:
+    1. TÍTULO E CABEÇALHO FORMAL.
+    2. ABERTURA E PRESENÇAS: Referência à data, hora, local, direção da reunião (Presidente e Secretário), quórum e faltas.
+    3. ORDEM DE TRABALHOS: Enumeração dos pontos agendados.
+    4. DESENVOLVIMENTO DOS PONTOS DA ORDEM DE TRABALHOS:
+       - Discussão/Análise efetuada;
+       - RESUMO EXPLICATIVO DO CONTEÚDO DOS DOCUMENTOS ANEXOS (caso existam no ponto);
+       - Deliberações ou votações apuradas.
+    5. ENCERRAMENTO E ASSINATURAS: Cláusula de encerramento tradicional.
+
+    Respeita escrupulosamente a variante linguística: Português de Portugal (PT-PT).`;
+
+        const promptUtilizador = `Por favor, redige a ata completa com base nos seguintes dados:
+
+    - Tipo de Ata: ${tipoAta === 'departamento' ? 'Ata de Departamento Curricular' : 'Ata de Conselho de Estabelecimento'}
+    - Agrupamento / Escola: ${agrupamento} | ${escola}
+    - Estrutura/Unidade: ${tipoAta === 'departamento' ? departamento : 'Conselho do Estabelecimento'}
+    - Número da Ata: ${numeroAta} | Ano Letivo: ${anoLetivo}
+    - Data e Horário: ${data}, das ${horaInicio} às ${horaFim}
+    - Local: ${local}
+    - Presidente/Coordenadora: ${presidente || 'Margarida Simões'}
+    - Secretária: ${secretario || 'Carla Carvalho'}
+    - Membros Presentes:
+    ${membrosPresentes || 'Não especificado'}
+    - Faltas / Membros Ausentes:
+    ${membrosAusentes || 'Sem registo de faltas'}
+
+    ORDEM DE TRABALHOS:
+    ${ordemTrabalhos.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+    REGISTO DE INTERVENÇÕES, DELIBERAÇÕES E RESUMO DOS ANEXOS POR PONTO:
+    ${intervencoes.map((item, idx) => `
+    [Ponto ${idx + 1}: ${item.ponto}]
+    - Discussão/Resumo da Reunião: ${item.resumo || 'Sem notas adicionais.'}
+    - Documento(s) Anexo(s): ${item.anexos || 'Sem anexos.'}
+    - RESUMO DO CONTEÚDO DO ANEXO (INCLUIR OBRIGATORIAMENTE NA ATA): ${item.resumoAnexo || 'Não foi fornecido resumo adicional do documento.'}
+    - Deliberação/Votação: ${item.deliberacao || 'Tomada de conhecimento.'}
+    `).join('\n')}
+
+    ESTILO SOLICITADO: ${estiloRedacao === 'formal_detalhado' ? 'Formal e Pormenorizado' : 'Formal, Sintético e Objetivo'}`;
+
+        try {
+          const apiKey = ""; // Chave API a ser inserida pelo utilizador localmente se usar o Gemini
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+          const payload = {
+            contents: [{ parts: [{ text: promptUtilizador }] }],
+            systemInstruction: { parts: [{ text: promptSistema }] }
+          };
+
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`Erro na chamada da API: ${response.status}`);
+          }
+
+          const result = await response.json();
+          const textoGerado = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (textoGerado) {
+            setTextoAtaGerada(textoGerado);
+            setPassoAtual(4);
+            mostrarNotificacao('Ata redigida com sucesso pela IA (Gemini) com resumo dos anexos!');
+          } else {
+            throw new Error('Conteúdo inválido retornado pela IA');
+          }
+        } catch (err) {
+          console.warn('Fallback ativado devido a limitação de rede ou API:', err);
+          const ataLocal = construirAtaLocal();
+          setTextoAtaGerada(ataLocal);
+          setPassoAtual(4);
+          mostrarNotificacao('Ata gerada com o assistente local!', 'aviso');
+        } finally {
+          setIsGerando(false);
+        }
+      };
+
+      const construirAtaLocal = () => {
+        const dataFormatada = new Date(data).toLocaleDateString('pt-PT', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+
+        return `ATA NÚMERO ${numeroAta}
+REUNIÃO DO ${tipoAta === 'departamento' ? departamento.toUpperCase() : 'CONSELHO DO ESTABELECIMENTO'}
+ANO LETIVO ${anoLetivo}
+
+Ao(s) ${dataFormatada}, pelas ${horaInicio} horas, reuniu na ${local} do ${escola}, pertencente ao ${agrupamento}, o ${tipoAta === 'departamento' ? departamento : 'Conselho de Estabelecimento'}, sob a presidência de ${presidente || 'Margarida Simões'}, secretariada por ${secretario || 'Carla Carvalho'}.
+
+PRESENÇAS E FALTAS:
+Estiveram presentes na reunião os seguintes membros:
+${membrosPresentes ? membrosPresentes.split('\n').map(m => `- ${m}`).join('\n') : '- Conforme lista de presenças anexa.'}
+
+Faltas registadas:
+${membrosAusentes ? membrosAusentes : 'Não se registaram faltas.'}
+
+Verificada a existência de quórum legal, a reunião teve início com a seguinte ORDEM DE TRABALHOS:
+${ordemTrabalhos.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+DESENVOLVIMENTO DA REUNIÃO:
+
+${intervencoes.map((item, index) => `--- ${item.ponto} ---
+Ponto número ${index + 1}: ${item.ponto}.
+Relativamente a este ponto, ${item.resumo || 'foram analisados os documentos de trabalho e trocadas impressões entre os docentes presentes.'}
+${item.anexos ? `\n[Documento Anexo: ${item.anexos}]` : ''}
+${item.resumoAnexo ? `Síntese do documento anexo: ${item.resumoAnexo}` : ''}
+
+Deliberação/Votação: ${item.deliberacao || 'O assunto foi dado a conhecer, ficando registado para efeitos informativos.'}
+`).join('\n\n')}
+
+ENCERRAMENTO:
+E nada mais havendo a tratar, a reunião foi dada por encerrada pelas ${horaFim} horas, da qual se lavrou a presente ata que, após lida e aprovada, vai ser assinada pela Presidente e pela Secretária da reunião.
+
+
+A Presidente:
+____________________________________________________
+(${presidente || 'Margarida Simões'})
+
+
+A Secretária da reunião:
+____________________________________________________
+(${secretario || 'Carla Carvalho'})
+`;
+      };
+
+      const copiarParaAreaTransferencia = () => {
+        navigator.clipboard.writeText(textoAtaGerada);
+        mostrarNotificacao('Texto da ata copiado para a área de transferência!');
+      };
+
+      const descarregarTexto = () => {
+        const blob = new Blob([textoAtaGerada], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Ata_${numeroAta}_${tipoAta}_${anoLetivo.replace('/', '-')}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        mostrarNotificacao('Ficheiro descarregado com sucesso!');
+      };
+
+      const imprimirAta = () => {
+        window.print();
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-12 flex flex-col selection:bg-cyan-200">
+          
+          {mensagemToast && (
+            <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
+              mensagemToast.tipo === 'aviso' ? 'bg-indigo-500' : 'bg-blue-600'
+            }`}>
+              {mensagemToast.tipo === 'aviso' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+              <span className="font-medium text-sm md:text-base">{mensagemToast.texto}</span>
+            </div>
+          )}
+
+          <header className="bg-gradient-to-r from-blue-800 via-blue-700 to-sky-700 text-white shadow-lg print:hidden">
+            <div className="max-w-6xl mx-auto px-4 py-4 md:py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              
+              <div className="flex items-center gap-3 text-center md:text-left">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-400 text-blue-900 flex items-center justify-center font-bold shadow-md transform -rotate-3">
+                  <FileText size={28} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 justify-center md:justify-start">
+                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">CarlaBot: Sobrevivente do 1º Ciclo</h1>
+                    <span className="bg-indigo-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      PT-PT
+                    </span>
+                  </div>
+                  <p className="text-xs md:text-sm text-blue-100 font-light">
+                    Assistente de Atas Escolares (Focado no Perfil dos Alunos)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <button
+                  onClick={carregarExemplo}
+                  className="flex items-center gap-2 px-3 py-2 bg-cyan-400 hover:bg-cyan-300 text-blue-950 rounded-lg text-xs md:text-sm font-semibold transition shadow active:scale-95 cursor-pointer"
+                  title="Preenche a aplicação com dados reais de exemplo para testar rápido"
+                >
+                  <Sparkles size={16} className="text-blue-800" />
+                  <span>Carregar Exemplo</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (textoAtaGerada) setModoVisualizacao(!modoVisualizacao);
+                    else mostrarNotificacao('Gere primeiro a ata para pré-visualizar!', 'aviso');
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-900/60 hover:bg-blue-900 text-white rounded-lg text-xs md:text-sm font-medium border border-blue-500/30 transition cursor-pointer"
+                >
+                  <Eye size={16} />
+                  <span>{modoVisualizacao ? 'Editar Dados' : 'Vista de Documento'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="max-w-6xl mx-auto px-2 md:px-4 bg-blue-900/40 border-t border-blue-500/20">
+              <div className="flex justify-between md:justify-start gap-1 md:gap-4 overflow-x-auto py-2 scrollbar-none">
+                {[
+                  { num: 1, label: 'Identificação & Membros', icon: Building2 },
+                  { num: 2, label: 'Ordem Trabalhos', icon: BookOpen },
+                  { num: 3, label: 'Intervenções & Anexos', icon: Edit3 },
+                  { num: 4, label: 'Ata Gerada (IA)', icon: Sparkles }
+                ].map((tab) => {
+                  const Icone = tab.icon;
+                  const ativo = passoAtual === tab.num;
+                  return (
+                    <button
+                      key={tab.num}
+                      onClick={() => setPassoAtual(tab.num)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs md:text-sm font-medium whitespace-nowrap transition-all cursor-pointer ${
+                        ativo 
+                          ? 'bg-cyan-400 text-blue-950 font-bold shadow-sm' 
+                          : 'text-blue-100 hover:bg-blue-800/50 hover:text-white'
+                      }`}
+                    >
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                        ativo ? 'bg-blue-900 text-cyan-300' : 'bg-blue-900/50 text-blue-200'
+                      }`}>
+                        {tab.num}
+                      </span>
+                      <Icone size={16} />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </header>
+
+          {modoVisualizacao && textoAtaGerada ? (
+            <main className="max-w-4xl mx-auto w-full px-4 py-8 flex-1">
+              <div className="mb-4 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 print:hidden">
+                <button
+                  onClick={() => setModoVisualizacao(false)}
+                  className="flex items-center gap-2 text-slate-600 hover:text-slate-900 text-sm font-medium cursor-pointer"
+                >
+                  <ChevronLeft size={18} /> Voltar à Edição
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={copiarParaAreaTransferencia}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Copy size={16} /> Copiar
+                  </button>
+                  <button
+                    onClick={imprimirAta}
+                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 shadow cursor-pointer"
+                  >
+                    <Printer size={16} /> Imprimir / PDF
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 md:p-14 rounded-2xl shadow-xl border border-slate-200 font-serif text-slate-900 leading-relaxed text-justify print:shadow-none print:p-0 print:border-none">
+                <div className="border-b-2 border-slate-800 pb-4 mb-8 text-center uppercase tracking-wide">
+                  <h2 className="text-base font-bold text-slate-800">{agrupamento}</h2>
+                  <h3 className="text-sm text-slate-600">{escola}</h3>
+                  <p className="text-xs text-slate-500 mt-1">Ano Letivo {anoLetivo}</p>
+                </div>
+
+                <div className="whitespace-pre-wrap text-sm md:text-base leading-8 font-serif">
+                  {textoAtaGerada}
+                </div>
+              </div>
+            </main>
+          ) : (
+
+            <main className="max-w-5xl mx-auto w-full px-4 py-6 md:py-8 flex-1 print:hidden">
+
+              {passoAtual === 1 && (
+                <div className="space-y-6 animate-fadeIn">
+                  
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider flex items-center gap-2">
+                      <ShieldCheck className="text-cyan-600" size={18} />
+                      Tipo de Reunião Escolar
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setTipoAta('departamento')}
+                        className={`p-4 rounded-xl border-2 text-left transition flex items-start gap-3 cursor-pointer ${
+                          tipoAta === 'departamento'
+                            ? 'border-blue-600 bg-blue-50/50 text-blue-950'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg ${tipoAta === 'departamento' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          <BookOpen size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm md:text-base">Ata de Departamento Curricular</h4>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Reuniões periódicas de grupos de disciplinas ou ciclos.
+                          </p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setTipoAta('estabelecimento')}
+                        className={`p-4 rounded-xl border-2 text-left transition flex items-start gap-3 cursor-pointer ${
+                          tipoAta === 'estabelecimento'
+                            ? 'border-indigo-500 bg-indigo-50/50 text-indigo-950'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg ${tipoAta === 'estabelecimento' ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          <Building2 size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm md:text-base">Ata do Conselho de Estabelecimento</h4>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Conselho Pedagógico, Conselho de Escola ou Direção.
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 className="text-lg font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2">
+                      <Building2 className="text-blue-600" size={20} />
+                      Identificação da Instituição
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Agrupamento de Escolas / Escola Não Agrupada
+                        </label>
+                        <input
+                          type="text"
+                          value={agrupamento}
+                          onChange={(e) => setAgrupamento(e.target.value)}
+                          placeholder="Agrupamento de Escolas Bartolomeu de Gusmão"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Nome da Escola / Jardim de Infância
+                        </label>
+                        <select
+                          value={escola}
+                          onChange={(e) => setEscola(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-white font-medium text-slate-800"
+                        >
+                          {ESCOLAS_OPCOES.map((opcaoEscola, idx) => (
+                            <option key={idx} value={opcaoEscola}>
+                              {opcaoEscola}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {tipoAta === 'departamento' && (
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">
+                            Nome do Departamento Curricular
+                          </label>
+                          <input
+                            type="text"
+                            value={departamento}
+                            onChange={(e) => setDepartamento(e.target.value)}
+                            placeholder="Departamento de Educação Pré-Escolar e 1.º Ciclo"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Ata Número (Ordem)
+                        </label>
+                        <input
+                          type="text"
+                          value={numeroAta}
+                          onChange={(e) => setNumeroAta(e.target.value)}
+                          placeholder="Ex: 01"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Ano Letivo
+                        </label>
+                        <input
+                          type="text"
+                          value={anoLetivo}
+                          onChange={(e) => setAnoLetivo(e.target.value)}
+                          placeholder="2026/2027"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 className="text-lg font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2">
+                      <Calendar className="text-indigo-500" size={20} />
+                      Data, Horário e Local
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Data da Reunião
+                        </label>
+                        <input
+                          type="date"
+                          value={data}
+                          onChange={(e) => setData(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Hora de Início
+                        </label>
+                        <input
+                          type="time"
+                          value={horaInicio}
+                          onChange={(e) => setHoraInicio(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Hora de Encerramento
+                        </label>
+                        <input
+                          type="time"
+                          value={horaFim}
+                          onChange={(e) => setHoraFim(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                        />
+                      </div>
+
+                      <div className="md:col-span-3">
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Local / Sala de Reunião
+                        </label>
+                        <input
+                          type="text"
+                          value={local}
+                          onChange={(e) => setLocal(e.target.value)}
+                          placeholder="Ex: Sala de Reuniões 1 / Plataforma Teams"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 className="text-lg font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2">
+                      <Users className="text-cyan-600" size={20} />
+                      Membros e Presenças
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Presidente da Reunião
+                        </label>
+                        <input
+                          type="text"
+                          value={presidente}
+                          onChange={(e) => setPresidente(e.target.value)}
+                          placeholder="Margarida Simões"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none font-medium text-slate-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Secretária da Reunião
+                        </label>
+                        <input
+                          type="text"
+                          value={secretario}
+                          onChange={(e) => setSecretario(e.target.value)}
+                          placeholder="Carla Carvalho"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-semibold text-slate-600">
+                            Lista de Membros Presentes ({membrosPresentes ? membrosPresentes.split('\n').filter(Boolean).length : 0} docentes)
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setMembrosPresentes(MEMBROS_LISTA.join('\n'))}
+                            className="text-xs text-blue-700 font-semibold hover:underline"
+                          >
+                            Restaurar Lista Padrão
+                          </button>
+                        </div>
+                        <textarea
+                          rows={4}
+                          value={membrosPresentes}
+                          onChange={(e) => setMembrosPresentes(e.target.value)}
+                          placeholder="Carla Carvalho&#10;Paula Simões..."
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none font-mono"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Faltas / Ausências Justificadas e Injustificadas
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={membrosAusentes}
+                          onChange={(e) => setMembrosAusentes(e.target.value)}
+                          placeholder="Ex: Não se registaram faltas."
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={() => setPassoAtual(2)}
+                      className="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-base cursor-pointer"
+                    >
+                      <span>Avançar para Ordem de Trabalhos</span>
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+
+                </div>
+              )}
+
+              {passoAtual === 2 && (
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <BookOpen className="text-blue-600" size={20} />
+                        Ordem de Trabalhos (Agenda da Reunião)
+                      </h3>
+                      <span className="text-xs font-semibold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {ordemTrabalhos.length} Pontos
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-500">
+                      Adiciona cada ponto que constava na convocatória da reunião. Estes pontos estruturam os registos de discussão do passo seguinte.
+                    </p>
+
+                    <div className="flex flex-col md:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={novoPontoOrdem}
+                        onChange={(e) => setNovoPontoOrdem(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && adicionarPontoOrdem()}
+                        placeholder="Ex: Análise das fichas formativas e plano de ação pedagógica"
+                        className="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                      />
+                      <button
+                        onClick={adicionarPontoOrdem}
+                        className="px-5 py-3 bg-cyan-500 hover:bg-cyan-600 text-blue-950 font-bold rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-sm cursor-pointer"
+                      >
+                        <Plus size={18} />
+                        <span>Adicionar Ponto</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-3 mt-4">
+                      {ordemTrabalhos.length === 0 ? (
+                        <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-400 text-sm">
+                          Nenhum ponto adicionado à Ordem de Trabalhos.
+                        </div>
+                      ) : (
+                        ordemTrabalhos.map((ponto, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-cyan-50/30 rounded-xl border border-slate-200 transition group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm font-medium text-slate-800">{ponto}</span>
+                            </div>
+                            <button
+                              onClick={() => removerPontoOrdem(index)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Remover ponto"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between gap-3 pt-2">
+                    <button
+                      onClick={() => setPassoAtual(1)}
+                      className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl transition flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    >
+                      <ChevronLeft size={18} />
+                      <span>Anterior</span>
+                    </button>
+
+                    <button
+                      onClick={() => setPassoAtual(3)}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    >
+                      <span>Avançar para Intervenções</span>
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {passoAtual === 3 && (
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div className="pb-2 border-b border-slate-100">
+                      <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <Edit3 className="text-indigo-500" size={20} />
+                        Registo de Intervenções, Anexos e Deliberações
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Escreve o resumo do debate e, quando forem anexados documentos ao ponto, indica a síntese/conteúdo essencial do anexo para que a IA a incorpore na ata.
+                      </p>
+                    </div>
+
+                    {ordemTrabalhos.length === 0 ? (
+                      <div className="p-6 bg-cyan-50 rounded-xl border border-cyan-200 text-center text-cyan-800 text-sm">
+                        Primeiro adiciona os pontos na <strong>Ordem de Trabalhos</strong> no passo anterior.
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {ordemTrabalhos.map((ponto, index) => (
+                          <div
+                            key={index}
+                            className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3"
+                          >
+                            <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                              <span className="w-6 h-6 rounded-md bg-indigo-500 text-white font-bold text-xs flex items-center justify-center">
+                                {index + 1}
+                              </span>
+                              <h4 className="font-bold text-slate-800 text-sm md:text-base">
+                                {ponto}
+                              </h4>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                                  Resumo das Intervenções / Discussão na Reunião
+                                </label>
+                                <textarea
+                                  rows={3}
+                                  value={intervencoes[index]?.resumo || ''}
+                                  onChange={(e) => atualizarIntervencao(index, 'resumo', e.target.value)}
+                                  placeholder="Ex: A Presidente Margarida Simões abriu a sessão. A educadora Carla Carvalho partilhou as conclusões do grupo..."
+                                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none bg-white"
+                                />
+                              </div>
+
+                              <div className="p-3 bg-cyan-50/70 rounded-xl border border-cyan-200 space-y-2">
+                                <label className="block text-xs font-bold text-cyan-900 flex items-center gap-1.5">
+                                  <Paperclip size={15} className="text-cyan-700" />
+                                  <span>Documentos Anexados ao Ponto</span>
+                                </label>
+
+                                <div className="flex items-center gap-2">
+                                  <label 
+                                    htmlFor={`file-upload-${index}`}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-cyan-100 text-cyan-900 border border-cyan-300 rounded-xl text-xs font-semibold cursor-pointer transition shadow-sm"
+                                  >
+                                    <Upload size={15} className="text-cyan-700" />
+                                    <span>Anexar Ficheiro / Documento...</span>
+                                  </label>
+                                  <input
+                                    id={`file-upload-${index}`}
+                                    type="file"
+                                    multiple
+                                    onChange={(e) => handleFileUpload(index, e)}
+                                    className="hidden"
+                                  />
+                                </div>
+
+                                {intervencoes[index]?.ficheirosAnexados?.length > 0 && (
+                                  <div className="space-y-1.5 pt-1">
+                                    {intervencoes[index].ficheirosAnexados.map((file, fIdx) => (
+                                      <div 
+                                        key={fIdx} 
+                                        className="flex items-center justify-between px-2.5 py-1.5 bg-white border border-cyan-200 rounded-lg text-xs"
+                                      >
+                                        <div className="flex items-center gap-2 overflow-hidden truncate">
+                                          <File size={14} className="text-blue-600 flex-shrink-0" />
+                                          <span className="font-medium text-slate-700 truncate">{file.name}</span>
+                                          <span className="text-[10px] text-slate-400 flex-shrink-0">({file.size})</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => removerFicheiroAnexo(index, fIdx)}
+                                          className="text-slate-400 hover:text-red-600 p-0.5 rounded transition"
+                                          title="Remover ficheiro"
+                                        >
+                                          <X size={14} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                <input
+                                  type="text"
+                                  value={intervencoes[index]?.anexos || ''}
+                                  onChange={(e) => atualizarIntervencao(index, 'anexos', e.target.value)}
+                                  placeholder="Nome/Identificação dos anexos (ex: Anexo I - Plano Anual de Atividades)"
+                                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 text-xs outline-none bg-white text-slate-700"
+                                />
+
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-cyan-900 mb-1 flex items-center gap-1">
+                                    <FileTextIcon size={12} className="text-cyan-700" />
+                                    Resumo / Síntese do Conteúdo do Anexo (Para incluir na Ata)
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    value={intervencoes[index]?.resumoAnexo || ''}
+                                    onChange={(e) => atualizarIntervencao(index, 'resumoAnexo', e.target.value)}
+                                    placeholder="Descreva sucintamente o que consta do documento anexo (ex: O plano apresenta os objetivos pedagógicos, calendarização das visitas de estudo e orçamento previsto...)"
+                                    className="w-full px-3 py-2 rounded-xl border border-cyan-300 focus:ring-2 focus:ring-blue-500 text-xs outline-none bg-white text-slate-800 placeholder:text-slate-400"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                                  Deliberação / Resultado da Votação
+                                </label>
+                                <input
+                                  type="text"
+                                  value={intervencoes[index]?.deliberacao || ''}
+                                  onChange={(e) => atualizarIntervencao(index, 'deliberacao', e.target.value)}
+                                  placeholder="Ex: Aprovado por unanimidade / Aprovado por maioria."
+                                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm outline-none bg-white"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Estilo de Redação Gemini IA
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEstiloRedacao('formal_detalhado')}
+                        className={`p-3 rounded-xl border text-left text-xs md:text-sm font-medium transition cursor-pointer ${
+                          estiloRedacao === 'formal_detalhado'
+                            ? 'border-blue-600 bg-blue-50 text-blue-950 font-bold'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        📝 Formal Completo & Pormenorizado
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEstiloRedacao('formal_sintetico')}
+                        className={`p-3 rounded-xl border text-left text-xs md:text-sm font-medium transition cursor-pointer ${
+                          estiloRedacao === 'formal_sintetico'
+                            ? 'border-blue-600 bg-blue-50 text-blue-950 font-bold'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        ⚡ Formal Sintético & Objetivo
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row justify-between gap-3 pt-2">
+                    <button
+                      onClick={() => setPassoAtual(2)}
+                      className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl transition flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    >
+                      <ChevronLeft size={18} />
+                      <span>Anterior</span>
+                    </button>
+
+                    <button
+                      onClick={gerarAtaComGemini}
+                      disabled={isGerando}
+                      className="px-8 py-3.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-blue-600 hover:opacity-95 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-3 text-base disabled:opacity-50 cursor-pointer"
+                    >
+                      {isGerando ? (
+                        <>
+                          <RefreshCw size={20} className="animate-spin" />
+                          <span>A Redigir a Ata com IA...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={20} className="text-cyan-200" />
+                          <span>Gerar Ata Oficial com IA</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {passoAtual === 4 && (
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                          <Sparkles className="text-cyan-500" size={20} />
+                          Ata Redigida em Português Europeu
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Podes rever e editar diretamente a caixa de texto abaixo antes de copiar ou imprimir.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full md:w-auto">
+                        <button
+                          onClick={copiarParaAreaTransferencia}
+                          className="flex-1 md:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs md:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Copy size={16} /> Copiar
+                        </button>
+                        <button
+                          onClick={descarregarTexto}
+                          className="flex-1 md:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs md:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Download size={16} /> Ficheiro
+                        </button>
+                        <button
+                          onClick={() => setModoVisualizacao(true)}
+                          className="flex-1 md:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm font-bold rounded-xl transition shadow flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Eye size={16} /> Imprimir / PDF
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <textarea
+                        rows={18}
+                        value={textoAtaGerada}
+                        onChange={(e) => setTextoAtaGerada(e.target.value)}
+                        placeholder="A tua ata gerada aparecerá aqui..."
+                        className="w-full p-4 md:p-6 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm md:text-base font-serif leading-relaxed text-slate-800 outline-none bg-slate-50/50 shadow-inner"
+                      />
+                    </div>
+
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-3 pt-2">
+                      <button
+                        onClick={() => setPassoAtual(3)}
+                        className="w-full md:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <ChevronLeft size={18} />
+                        <span>Voltar ao Registo de Notas</span>
+                      </button>
+
+                      <button
+                        onClick={gerarAtaComGemini}
+                        disabled={isGerando}
+                        className="w-full md:w-auto px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-blue-950 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                      >
+                        <RefreshCw size={16} className={isGerando ? 'animate-spin' : ''} />
+                        <span>Regerar com a IA</span>
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+            </main>
+          )}
+
+          <footer className="max-w-5xl mx-auto w-full px-4 pt-6 text-center text-xs text-slate-400 border-t border-slate-200 print:hidden">
+            <p>
+              CarlaBot AI &copy; {new Date().getFullYear()} &bull; Desenvolvido para Escolas e Agrupamentos em Portugal &bull; Língua Portuguesa (PT-PT)
+            </p>
+          </footer>
+
+        </div>
+      );
+    }
+
+    const rootElement = document.getElementById('root');
+    const root = createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
